@@ -4,10 +4,8 @@ function humanizeDate(inDate) {
   let oldDateParts = inDate.match(/^(\d+)\.(\d+)\.(\d+)$/);
   let recentDateParts = inDate.match(/^(\d+)\s+([а-я]+)\.$/);
   let todayDateParts = inDate.match(/^(\d+):(\d+)$/);
-  
-//  console.log(oldDateParts);
-//  console.log(recentDateParts);
-//  console.log(todayDateParts);
+  let msgRecentDateParts = inDate.match(/^(\d+)\s+([а-я]+)\.\s+в\s+(\d+):(\d+)$/); // 3 янв. в 15:19
+  let msgOldDateParts = inDate.match(/^(\d+)\s+([а-я]+)\s+(\d+)\s+в\s+(\d+):(\d+)$/); // 30 декабря 2018 в 22:35
   
   if (oldDateParts) {
     //console.log("newDate: "+newDate);
@@ -25,6 +23,17 @@ function humanizeDate(inDate) {
   else if (todayDateParts) {
     //console.log("todayDateParts");
     newDate = "сегодня в " + inDate;
+  }
+  else if (msgRecentDateParts) {
+    let day = msgRecentDateParts[1];
+    let month = msgRecentDateParts[2];
+    newDate = day + " " + month_short2long(month);
+  }
+  else if (msgOldDateParts) {
+    let day = msgOldDateParts[1];
+    let month = msgOldDateParts[2];
+    let year = msgOldDateParts[3];
+    newDate = day + " " + month + " " + year + " года";
   }
   
   return newDate;
