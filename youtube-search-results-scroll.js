@@ -36,27 +36,20 @@ function processPage() {
   // Собираю ссылки на результаты
   let resSet = $("A#video-title");
    
- 	setTimeout(function(){
-    
-    // Переделываю страницу
-    // 1) подготовка переделки
-    $(document.body).empty();
-    $(document.body).append("<style>BODY { padding: 20pt; } * { font-family: serif; } A { font-size: 2em; } H1 { text-align:center; padding-bottom: 20pt; }</style>");
-    $(document.body).append("<h1>Результаты поиска видео по запросу &laquo;"+searchQuery+"&raquo;</h1>");
+  // Переделываю страницу
+  $(document.body).empty();
+  $(document.body).append("<style>BODY { padding: 20pt; } * { font-family: serif; } A { font-size: 2em; } H1 { text-align:center; padding-bottom: 20pt; }</style>");
+  $(document.body).append("<button id='focusStart'>Начальная позиция</button><br>");
+  $(document.body).append("<button>Результаты поиска видео по запросу &laquo;"+searchQuery+"&raquo;</button><br>");
 
-    $(document.body).append("<ul id='resultsList'></ul>");
+  $(document.body).append("<ul id='resultsList'></ul>");
 
-    resSet.each(function(index, element){
-      let text = $(element).text();
-      let href = "https://www.youtube.com" + $(element).attr('href');
-      //$(document.body).append( $("<li><a href='"+href+"' target='_blank'>"+text+"</a></li>") );
-      $("ul#resultsList").append( $("<li><a href='"+href+"' target='_blank'>"+text+"</a></li>") );
-    });
-
-    //$(document.body).append("</ul>");
-    
-  }, 3000);
+  resSet.each(function(index, element){
+    let text = $(element).text();
+    let href = "https://www.youtube.com" + $(element).attr('href');
+    //$(document.body).append( $("<li><a href='"+href+"' target='_blank'>"+text+"</a></li>") );
+    $("ul#resultsList").append( $("<li class='resultsItem'><a href='"+href+"' target='_blank'>"+text+"</a></li>") );
+  });
   
+  $("#focusStart").focus();
 }
-
-
