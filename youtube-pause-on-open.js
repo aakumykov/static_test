@@ -12,5 +12,7 @@ var $ = window.jQuery;
 $(document).ready(function(){
 
   $('video.html5-main-video').get(0).pause()
-
+  
+  document.title = 'Просмотр видео';
+  
 });
