@@ -2,19 +2,38 @@
 
 ; Глобальные переменные
 readerMode := false
+nvdaIsRun := false
 
 ; Функции
-;checkWindow(initialTitle){
-;	WinGetTitle, winTitle, ahk_class MozillaWindowClass
-;	
-;}
-
 openSearch() {
-	Run, firefox.exe "http://ya.ru"
+	global readerMode
+	if (readerMode) {
+		;runWebserver()3
+		Run, firefox.exe "http://ya.ru"
+	}
 }
 
 openMail(){
-	Run, firefox.exe "http://mail.yandex.ru/lite"
+	global readerMode
+	if (readerMode) {
+		;runWebserver()
+		Run, firefox.exe "http://mail.yandex.ru/lite"
+	}
+}
+
+startNVDA() {
+	global nvdaIsRun
+	;if (! Process, Exist, nvda.exe ) {
+	if (!nvdaIsRun) {
+		Run, nvda.exe, "C:\Program Files (x86)\NVDA", UseErrorLevel
+			;nvdaIsRun := true
+	}
+}
+
+stopNVDA() {
+	global nvdaIsRun
+	Process, Close, nvda.exe
+	nvdaIsRun := false
 }
 
 focusFirefox(){
@@ -24,7 +43,7 @@ focusFirefox(){
 nextLink(){
 	global readerMode
 	if (readerMode) {
-		
+		startNVDA()
 		focusFirefox()
 		Send, `t
 	}
@@ -33,24 +52,28 @@ nextLink(){
 prevLink(){
 	global readerMode
 	if (readerMode) {
+		startNVDA()
 		focusFirefox()
 		Send, +`t
 	}
 }
 
 openLink(){
-	focusFirefox()
-    Send, {Return}
-	;Click
-	;Sleep, 1000
-	;WinGetTitle, currentWinTitle, ahk_class MozillaWindowClass
-    ;SetTimer, WindowTitleCheck, 100
+	global readerMode
+	if (readerMode) {
+		focusFirefox()
+		Send, {Return}
+		Sleep, 5000
+		
+	}
 }
 
 closeTab(){
-	;alertTitle()
-	focusFirefox()
-    Send, {Ctrl down}w{Ctrl up}
+	global readerMode
+	if (readerMode) {
+		focusFirefox()
+		Send, {Ctrl down}w{Ctrl up}
+	}
 }
 
 getWinTitle() {
@@ -109,16 +132,22 @@ alertTitle() {
 
 
 ; Логика
+if (Process, Exist, nvda.exe) {
+	nvdaIsRun := true
+} else {
+	nvdaIsRun := false
+}
+
 ScrollLock::
 readerMode := !readerMode
 ;MsgBox, , readerMode, %readerMode%
 return
 
-~F1::
+F1::
 nextLink()
 return
 
-~F2::
+F2::
 prevLink()
 return
 
@@ -155,9 +184,7 @@ videoSkipBack()
 return
 
 ~F7::
-Run, "C:\Program Files (x86)\NVDA\nvda.exe",, Hide
-;Sleep, 3000
-;MsgBox,, "NVDA", %nvdaPID%
+startNVDA()
 return
 
 ^z::
