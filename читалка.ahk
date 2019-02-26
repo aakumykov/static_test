@@ -2,7 +2,9 @@
 
 ; Глобальные переменные
 readerMode := false
+readerModeTimeout := 10
 nvdaIsRun := false
+firefoxReadingIsActive := false
 
 ; Функции
 openSearch() {
@@ -36,8 +38,37 @@ stopNVDA() {
 	nvdaIsRun := false
 }
 
+
+say(text){
+	Run, c:\windows\balcon.exe -n Aleks -t "%text%", ,Hide
+}
+
+readClipboard() {
+	Run, c:\windows\balcon.exe -n Aleks -c , ,Hide
+}
+
+stopReadClipboard() {
+	Process, Close, balcon.exe
+}
+
 focusFirefox(){
 	WinActivate, ahk_class MozillaWindowClass
+}
+
+firefoxIsOpened() {
+	Process, Exist, firefox.exe
+	return (0 != %ErrorLevel%)
+}
+
+firefoxPageIsLoaded() {
+	if (firefoxIsOpened()) {
+		focusFirefox()
+		ImageSearch, imageX, imageY, 76, 47, 100, 72, c:\Users\User\Pictures\firefox-page-load-complete.bmp
+		return (imageX and imageY)
+	} else {
+		;pronounceError "Фаерфокс не запущен!"
+		return false
+	}
 }
 
 nextLink(){
@@ -63,8 +94,10 @@ openLink(){
 	if (readerMode) {
 		focusFirefox()
 		Send, {Return}
-		Sleep, 5000
 		
+		while (!firefoxPageIsLoaded()) {
+			Sleep, 100
+		}
 	}
 }
 
@@ -74,11 +107,29 @@ closeTab(){
 		focusFirefox()
 		Send, {Ctrl down}w{Ctrl up}
 	}
+	firefoxReadingIsActive := false
+	stopReadClipboard()
 }
 
+
+; Чтение буфера обмена
+readThroughClipboard() {
+	stopNVDA()
+	Sleep, 1500
+	Click, 11, 118
+	Send, ^a
+	Send, ^c
+	readClipboard()
+}
+
+readingIsActive() {
+	return ((Process, Exist, balcon.exe) OR (firefoxReadingIsActive))
+}
+
+
 getWinTitle() {
-	WinGetTitle, currentWinTitle, A
-	return currentWinTitle
+	WinGetTitle, titleOfActiveWin, A
+	return titleOfActiveWin
 }
 
 isYoutubeVideo() {
@@ -119,6 +170,8 @@ videoSkipBack() {
 }
 
 
+
+
 ; Временные отладочные функции
 alertTitle() {
 	if ( isYoutubeVideo() ) {
@@ -138,20 +191,43 @@ if (Process, Exist, nvda.exe) {
 	nvdaIsRun := false
 }
 
+
+
+startReaderModeTimeout() {
+	while (readerModeTimeout > 0) {
+		Sleep, 1000
+		readerModeTimeout := readerModeTimeout - 1
+	}
+	readerMode := false
+}
+
 ScrollLock::
 readerMode := !readerMode
-;MsgBox, , readerMode, %readerMode%
+startReaderModeTimeout()
+;while (readerModeTimeout > 0) {
+;	Sleep, 1000
+;	readerModeTimeout := readerModeTimeout - 1
+;}
+;readerMode := false
+;say("Regim chteniya otkluchen")
+;MsgBox "Reader mode is OFF"
 return
 
 F1::
 nextLink()
+;focusFirefox()
+;Click, 200, 200
+;Send, ^a
+;Sleep, 100
+;Send, ^c
+;say(clipboard)
 return
 
-F2::
+~F2::
 prevLink()
 return
 
-~F3::
+F3::
 openLink()
 return
 
@@ -168,7 +244,8 @@ openSearch()
 return
 
 ~F6::
-alertTitle()
+;alertTitle()
+stopReadClipboard()
 return
 
 ~s::
@@ -187,15 +264,15 @@ return
 startNVDA()
 return
 
-^z::
-Process, Close, nvda.exe
+;^#z::
+;Process, Close, nvda.exe
 ;Runwait, taskkill /im firefox.exe /f
-return
+;return
 
 ; Блоки с метками
 WindowTitleCheck:
 	WinGetTitle, newWinTitle, ahk_class MozillaWindowClass
-	if (currentWinTitle != newWinTitle) {
+	if (titleOfActiveWin != newWinTitle) {
 		MsgBox, , 'Заголовок изменился', %newWinTitle%
 		SetTimer, WindowTitleCheck, Off
 	}
