@@ -1,23 +1,23 @@
 #SingleInstance Force
 
 ; Глобальные переменные
-readerMode := false
-readerModeTimeout := 10
+isReaderMode := false
+isReaderModeTimeout := 10
 nvdaIsRun := false
 firefoxReadingIsActive := false
 
 ; Функции
 openSearch() {
-	global readerMode
-	if (readerMode) {
+	global isReaderMode
+	if (isReaderMode) {
 		;runWebserver()3
 		Run, firefox.exe "http://ya.ru"
 	}
 }
 
 openMail(){
-	global readerMode
-	if (readerMode) {
+	global isReaderMode
+	if (isReaderMode) {
 		;runWebserver()
 		Run, firefox.exe "http://mail.yandex.ru/lite"
 	}
@@ -72,8 +72,8 @@ firefoxPageIsLoaded() {
 }
 
 nextLink(){
-	global readerMode
-	if (readerMode) {
+	global isReaderMode
+	if (isReaderMode) {
 		startNVDA()
 		focusFirefox()
 		Send, `t
@@ -81,8 +81,8 @@ nextLink(){
 }
 
 prevLink(){
-	global readerMode
-	if (readerMode) {
+	global isReaderMode
+	if (isReaderMode) {
 		startNVDA()
 		focusFirefox()
 		Send, +`t
@@ -90,8 +90,8 @@ prevLink(){
 }
 
 openLink(){
-	global readerMode
-	if (readerMode) {
+	global isReaderMode
+	if (isReaderMode) {
 		focusFirefox()
 		Send, {Return}
 		
@@ -102,13 +102,80 @@ openLink(){
 }
 
 closeTab(){
-	global readerMode
-	if (readerMode) {
+	global isReaderMode
+	if (isReaderMode) {
 		focusFirefox()
 		Send, {Ctrl down}w{Ctrl up}
 	}
 	firefoxReadingIsActive := false
 	stopReadClipboard()
+}
+
+
+; Работа с режимом чтения Firefox
+isReaderModeAvailable() {
+	ImageSearch, imageX, imageY, 1132, 46, 1158, 73, c:\Users\User\Pictures\firefox-reader-mode-start-icon.png
+	return (imageX and imageY)
+}
+
+isReaderModeActivated() {
+	ImageSearch, imageX, imageY, 0, 168, 45, 211, c:\Users\User\Pictures\firefox-reader-mode-start-icon.png
+	return (imageX and imageY)
+}
+
+activateReaderView() {
+	Click, 1146, 59
+}
+
+clickReadingControls() {
+	Click 22, 227
+}
+
+clickPlayPause() {
+	Click, 204, 222
+}
+
+clickReadNextParagraph() {
+	Click, 301, 222
+}
+
+clickReadPrevParagraph() {
+	Click, 102, 222
+}
+
+startStopReading() {
+	global firefoxReadingIsActive
+	if (!firefoxReadingIsActive) {
+		focusFirefox()
+		clickReadingControls()
+		clickPlayPause()
+		clickReadingControls()
+		firefoxReadingIsActive := true
+	} else {
+		focusFirefox()
+		clickReadingControls()
+		clickPlayPause()
+		clickReadingControls()
+		firefoxReadingIsActive := false
+	}
+}
+
+skipForward() {
+	global firefoxReadingIsActive
+	if (firefoxReadingIsActive) {
+		clickReadingControls()
+		clickReadNextParagraph()
+		clickReadingControls()
+	}
+}
+
+skipBack() {
+	global firefoxReadingIsActive
+	if (firefoxReadingIsActive) {
+		clickReadingControls()
+		clickReadPrevParagraph()
+		clickReadingControls()
+	}
 }
 
 
@@ -140,9 +207,9 @@ isYoutubeVideo() {
 }
 
 videoPlayPause() {
-	global readerMode
+	global isReaderMode
 	
-	if ( readerMode ) {
+	if ( isReaderMode ) {
 		if ( isYoutubeVideo() ) {
 			Click, 65, 529
 		}
@@ -150,9 +217,9 @@ videoPlayPause() {
 }
 
 videoSkipForward() {
-	global readerMode
+	global isReaderMode
 	
-	if ( readerMode ) {
+	if ( isReaderMode ) {
 		if ( isYoutubeVideo() ) {
 			Send, {Right}
 		}
@@ -160,9 +227,9 @@ videoSkipForward() {
 }
 
 videoSkipBack() {
-	global readerMode
+	global isReaderMode
 	
-	if ( readerMode ) {
+	if ( isReaderMode ) {
 		if ( isYoutubeVideo() ) {
 			Send, {Left}
 		}
@@ -194,21 +261,21 @@ if (Process, Exist, nvda.exe) {
 
 
 startReaderModeTimeout() {
-	while (readerModeTimeout > 0) {
+	while (isReaderModeTimeout > 0) {
 		Sleep, 1000
-		readerModeTimeout := readerModeTimeout - 1
+		isReaderModeTimeout := isReaderModeTimeout - 1
 	}
-	readerMode := false
+	isReaderMode := false
 }
 
 ScrollLock::
-readerMode := !readerMode
+isReaderMode := !isReaderMode
 startReaderModeTimeout()
-;while (readerModeTimeout > 0) {
+;while (isReaderModeTimeout > 0) {
 ;	Sleep, 1000
-;	readerModeTimeout := readerModeTimeout - 1
+;	isReaderModeTimeout := isReaderModeTimeout - 1
 ;}
-;readerMode := false
+;isReaderMode := false
 ;say("Regim chteniya otkluchen")
 ;MsgBox "Reader mode is OFF"
 return
@@ -235,6 +302,12 @@ return
 closeTab()
 return
 
+F6::
+if (isReaderMode) {
+	startStopReading()
+}
+return
+
 ~Numpad9::
 openMail()
 return
@@ -243,21 +316,25 @@ return
 openSearch()
 return
 
-~F6::
-;alertTitle()
-stopReadClipboard()
+~a::
+if (isReaderMode) {
+	;videoSkipBack()
+	skipBack()
+}
 return
 
 ~s::
-videoPlayPause()
+if (isReaderMode) {
+	startStopReading()
+}
+;videoPlayPause()
 return
 
 ~d::
-videoSkipForward()
-return
-
-~a::
-videoSkipBack()
+if (isReaderMode) {
+	;videoSkipForward()
+	skipForward()
+}
 return
 
 ~F7::
