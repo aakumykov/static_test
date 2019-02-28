@@ -7,6 +7,11 @@ nvdaIsRun := false
 firefoxReadingIsActive := false
 
 ; Функции
+prolongateReaderMode() {
+	global isReaderMode
+	isReaderMode := true
+}
+
 openSearch() {
 	global isReaderMode
 	if (isReaderMode) {
@@ -74,6 +79,7 @@ firefoxPageIsLoaded() {
 nextLink(){
 	global isReaderMode
 	if (isReaderMode) {
+		prolongateReaderMode()
 		startNVDA()
 		focusFirefox()
 		Send, `t
@@ -83,6 +89,7 @@ nextLink(){
 prevLink(){
 	global isReaderMode
 	if (isReaderMode) {
+		prolongateReaderMode()
 		startNVDA()
 		focusFirefox()
 		Send, +`t
@@ -146,12 +153,14 @@ clickReadPrevParagraph() {
 startStopReading() {
 	global firefoxReadingIsActive
 	if (!firefoxReadingIsActive) {
+		prolongateReaderMode()
 		focusFirefox()
 		clickReadingControls()
 		clickPlayPause()
 		clickReadingControls()
 		firefoxReadingIsActive := true
 	} else {
+		prolongateReaderMode()
 		focusFirefox()
 		clickReadingControls()
 		clickPlayPause()
@@ -163,6 +172,7 @@ startStopReading() {
 skipForward() {
 	global firefoxReadingIsActive
 	if (firefoxReadingIsActive) {
+		prolongateReaderMode()
 		clickReadingControls()
 		clickReadNextParagraph()
 		clickReadingControls()
@@ -172,6 +182,7 @@ skipForward() {
 skipBack() {
 	global firefoxReadingIsActive
 	if (firefoxReadingIsActive) {
+		prolongateReaderMode()
 		clickReadingControls()
 		clickReadPrevParagraph()
 		clickReadingControls()
@@ -261,6 +272,8 @@ if (Process, Exist, nvda.exe) {
 
 
 startReaderModeTimeout() {
+	global isReaderModeTimeout
+	global isReaderMode
 	while (isReaderModeTimeout > 0) {
 		Sleep, 1000
 		isReaderModeTimeout := isReaderModeTimeout - 1
@@ -271,13 +284,6 @@ startReaderModeTimeout() {
 ScrollLock::
 isReaderMode := !isReaderMode
 startReaderModeTimeout()
-;while (isReaderModeTimeout > 0) {
-;	Sleep, 1000
-;	isReaderModeTimeout := isReaderModeTimeout - 1
-;}
-;isReaderMode := false
-;say("Regim chteniya otkluchen")
-;MsgBox "Reader mode is OFF"
 return
 
 F1::
