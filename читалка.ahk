@@ -1,8 +1,12 @@
 #SingleInstance Force
 
+; Настройки
+readerModeIcon_Active := "c:\Users\User\Pictures\target.png"
+readerModeIcon_Inactive := "c:\Users\User\Pictures\target-grey.png"
+
 ; Глобальные переменные
 isReaderMode := false
-isReaderModeTimeout := 10
+readerModeTimeout := 120
 nvdaIsRun := false
 firefoxReadingIsActive := false
 
@@ -270,20 +274,33 @@ if (Process, Exist, nvda.exe) {
 }
 
 
+toggleReaderMode() {
+	global readerModeIcon_Active
+	global readerModeIcon_Inactive
+	global isReaderMode
+
+	isReaderMode := !isReaderMode
+	if (isReaderMode) {
+		Menu, Tray, Icon, %readerModeIcon_Active%
+	} else {
+		Menu, Tray, Icon, %readerModeIcon_Inactive%
+	}
+}
 
 startReaderModeTimeout() {
-	global isReaderModeTimeout
+	global readerModeTimeout
 	global isReaderMode
-	while (isReaderModeTimeout > 0) {
+	while (readerModeTimeout > 0) {
 		Sleep, 1000
-		isReaderModeTimeout := isReaderModeTimeout - 1
+		readerModeTimeout := readerModeTimeout - 1
 	}
 	isReaderMode := false
 }
 
+
+
 ScrollLock::
-isReaderMode := !isReaderMode
-startReaderModeTimeout()
+toggleReaderMode()
 return
 
 F1::
